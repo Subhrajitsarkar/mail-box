@@ -1,0 +1,164 @@
+:root {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: #2f2f2f;
+    background-color: #ffffff;
+}
+
+body {
+    margin: 0;
+    background-color: #ffffff;
+}
+
+.signup-page {
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background-color: #ffffff;
+}
+
+.top-nav {
+    padding: 0.5rem 0;
+    background-color: transparent;
+    z-index: 2;
+}
+
+.brand {
+    font-weight: 700;
+    color: #0a8f4a;
+    display: flex;
+    align-items: center;
+}
+
+.brand::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    margin-right: 8px;
+    background: radial-gradient(circle at 30% 30%, #17c964, #0a8f4a);
+}
+
+.nav-link {
+    color: #4d4d4d !important;
+    margin-left: 1rem;
+}
+
+.blue-wave {
+    position: absolute;
+    right: -180px;
+    top: -120px;
+    width: 620px;
+    height: 620px;
+    background: radial-gradient(circle at 30% 30%, #1f7dff, #0d63ff);
+    border-radius: 50% 40% 60% 40%;
+    transform: rotate(10deg);
+    z-index: 0;
+}
+
+.form-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 70px);
+    padding-bottom: 40px;
+}
+
+.signup-card {
+    width: 100%;
+    max-width: 360px;
+    padding: 18px 18px 12px;
+    border-radius: 14px;
+    border: 1px solid #e3e6ea;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.signup-card h4 {
+    font-weight: 600;
+}
+
+.form-control {
+    border-radius: 10px;
+}
+
+.primary-btn {
+    border-radius: 999px;
+    background: linear-gradient(90deg, #0f9ef6, #0b6bff);
+    border: none;
+}
+
+.primary-btn:disabled {
+    opacity: 0.7;
+}
+
+.login-btn {
+    margin-top: 16px;
+    border-radius: 10px;
+    min-width: 320px;
+    background-color: #e9f4ef;
+    border: 1px solid #c7d8cf;
+    color: #2f2f2f;
+}
+
+.login-btn:hover {
+    background-color: #dcece4;
+}
+
+.forgot-link {
+    color: #0f9ef6;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+.dashboard-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.dashboard-content {
+    padding: 3rem 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.welcome-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.welcome-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    margin-bottom: 1rem;
+}
+
+.user-email {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.mailbox-placeholder {
+    background: #f9f9f9;
+    border: 2px dashed #e3e6ea;
+    border-radius: 8px;
+    padding: 3rem 1rem;
+    color: #999;
+}
+
+.mailbox-placeholder p {
+    margin: 0;
+    font-size: 1.1rem;
+}
