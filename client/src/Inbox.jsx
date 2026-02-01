@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, Button, Card, ListGroup, Spinner } from "react-bootstrap";
 
-export default function Inbox({ userEmail, onMailRead }) {
+export default function Inbox({ userEmail, onUnreadCountChange }) {
     const [mails, setMails] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -10,6 +10,13 @@ export default function Inbox({ userEmail, onMailRead }) {
     useEffect(() => {
         fetchInboxMails();
     }, []);
+
+    useEffect(() => {
+        if (onUnreadCountChange) {
+            const unreadCount = mails.filter(m => !m.isRead).length;
+            onUnreadCountChange(unreadCount);
+        }
+    }, [mails, onUnreadCountChange]);
 
     const fetchInboxMails = async () => {
         try {
@@ -39,35 +46,6 @@ export default function Inbox({ userEmail, onMailRead }) {
         }
     };
 
-    const markAsRead = async (mailId) => {
-        try {
-            const token = localStorage.getItem("token");
-            await fetch(`http://localhost:5000/api/mail/${mailId}/read`, {
-                method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-
-            // Update local state
-            setMails(mails.map(mail => 
-                mail.id === mailId ? { ...mail, isRead: true } : mail
-            ));
-        } catch (err) {
-            console.error("Failed to mark as read:", err);
-        }
-    };
-
-    const handleMailClick = async (mail) => {
-        if (!mail.isRead) {
-            await markAsRead(mail.id);
-            if (onMailRead) {
-                onMailRead();
-            }
-        }
-        setSelectedMail({ ...mail, isRead: true });
-    };
-
     const handleDeleteMail = async (mailId) => {
         try {
             const token = localStorage.getItem("token");
@@ -86,6 +64,40 @@ export default function Inbox({ userEmail, onMailRead }) {
         } catch (err) {
             setError("Failed to delete mail.");
         }
+    };
+
+    const handleMailClick = async (mail) => {
+        setSelectedMail(mail);
+
+        // Mark as read if unread
+        if (!mail.isRead) {
+            try {
+                const token = localStorage.getItem("token");
+                await fetch(`http://localhost:5000/api/mail/${mail.id}/read`, {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                // Update local state
+                setMails(mails.map(m =>
+                    m.id === mail.id ? { ...m, isRead: true } : m
+                ));
+            } catch (err) {
+                console.error("Failed to mark as read:", err);
+            }
+        }
+    };
+
+    const getUnreadCount = () => {
+        return mails.filter(m => !m.isRead).length;
+    };
+
+    const stripHtml = (html) => {
+        const temp = document.createElement("div");
+        temp.innerHTML = html;
+        return temp.textContent || temp.innerText || "";
     };
 
     if (loading) {
@@ -156,19 +168,23 @@ export default function Inbox({ userEmail, onMailRead }) {
                             className={`mail-item ${!mail.isRead ? "unread" : ""}`}
                             onClick={() => handleMailClick(mail)}
                         >
-                            {!mail.isRead && <span className="blue-dot">●</span>}
-                            <div className="mail-content">
-                                <div className="d-flex justify-content-between align-items-start w-100">
-                                    <div className="flex-grow-1">
-                                        <strong className="d-block mb-1">{mail.from}</strong>
-                                        <span className="text-dark mail-subject">{mail.subject}</span>
-                                        <p className="mail-preview text-muted">
-                                            {mail.body.replace(/<[^>]*>/g, '').substring(0, 100)}...
-                                        </p>
+                            <div className="d-flex align-items-start w-100">
+                                {!mail.isRead && (
+                                    <div className="blue-dot me-2"></div>
+                                )}
+                                <div className="flex-grow-1">
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <strong className="d-block">{mail.from}</strong>
+                                            <span className="text-dark fw-semibold">{mail.subject}</span>
+                                            <p className="text-muted small mb-0 mail-preview">
+                                                {stripHtml(mail.body).substring(0, 100)}...
+                                            </p>
+                                        </div>
+                                        <small className="text-muted ms-3">
+                                            {new Date(mail.timestamp).toLocaleDateString()}
+                                        </small>
                                     </div>
-                                    <small className="text-muted ms-3">
-                                        {new Date(mail.timestamp).toLocaleDateString()}
-                                    </small>
                                 </div>
                             </div>
                         </div>

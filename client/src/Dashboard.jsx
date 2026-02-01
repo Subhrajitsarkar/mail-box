@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Container, Navbar, Nav, Button, Modal, ListGroup, Badge } from "react-bootstrap";
 import Compose from "./Compose";
 import Inbox from "./Inbox";
@@ -9,30 +9,6 @@ export default function Dashboard({ onLogout }) {
     const [showComposeModal, setShowComposeModal] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-    useEffect(() => {
-        fetchUnreadCount();
-    }, []);
-
-    const fetchUnreadCount = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:5000/api/mail/inbox", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (res.ok) {
-                const unread = data.mails.filter(mail => !mail.isRead).length;
-                setUnreadCount(unread);
-            }
-        } catch (err) {
-            console.error("Failed to fetch unread count:", err);
-        }
-    };
-
-    const handleMailRead = () => {
-        fetchUnreadCount();
-    };
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -86,8 +62,8 @@ export default function Dashboard({ onLogout }) {
                             <i className="bi bi-inbox-fill me-2"></i>
                             Inbox
                             {unreadCount > 0 && (
-                                <Badge bg="primary" pill className="ms-2">
-                                    {unreadCount > 999 ? "999+" : unreadCount}
+                                <Badge bg="primary" className="ms-auto">
+                                    {unreadCount}
                                 </Badge>
                             )}
                         </ListGroup.Item>
@@ -108,7 +84,7 @@ export default function Dashboard({ onLogout }) {
                         <h4>{activeView === "inbox" ? "Inbox" : "Sent"}</h4>
                     </div>
                     <div className="mail-body">
-                        {activeView === "inbox" && <Inbox userEmail={user.email} onMailRead={handleMailRead} />}
+                        {activeView === "inbox" && <Inbox userEmail={user.email} onUnreadCountChange={setUnreadCount} />}
                         {activeView === "sent" && <Sentbox userEmail={user.email} />}
                     </div>
                 </div>
