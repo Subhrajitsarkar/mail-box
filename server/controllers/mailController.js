@@ -99,6 +99,31 @@ export const getMailHandler = (req, res) => {
     }
 };
 
+export const markAsReadHandler = (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized. Token required." });
+        }
+
+        jwt.verify(token, getSecretKey());
+        const { mailId } = req.params;
+
+        const marked = markAsRead(mailId);
+
+        if (!marked) {
+            return res.status(404).json({ message: "Mail not found." });
+        }
+
+        return res.status(200).json({ message: "Mail marked as read.", mail: marked });
+    } catch (err) {
+        if (err.name === "JsonWebTokenError") {
+            return res.status(401).json({ message: "Invalid or expired token." });
+        }
+        res.status(500).json({ message: "Failed to mark mail as read." });
+    }
+};
+
 export const deleteMailHandler = (req, res) => {
     try {
         const token = req.headers.authorization?.split(" ")[1];
