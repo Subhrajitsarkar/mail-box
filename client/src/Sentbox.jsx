@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, ListGroup, Spinner } from "react-bootstrap";
+import { Alert, Button, Card, Spinner } from "react-bootstrap";
 
 export default function Sentbox({ userEmail }) {
     const [mails, setMails] = useState([]);
@@ -59,6 +59,12 @@ export default function Sentbox({ userEmail }) {
         }
     };
 
+    const stripHtml = (html) => {
+        const temp = document.createElement("div");
+        temp.innerHTML = html;
+        return temp.textContent || temp.innerText || "";
+    };
+
     if (loading) {
         return (
             <div className="text-center py-5">
@@ -70,42 +76,44 @@ export default function Sentbox({ userEmail }) {
 
     if (selectedMail) {
         return (
-            <div className="mail-detail-card" style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-                <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    onClick={() => setSelectedMail(null)}
-                    className="mb-3"
-                >
-                    Back to Sentbox
-                </Button>
-
-                <div className="mail-header">
-                    <h5>{selectedMail.subject}</h5>
-                    <div className="mail-meta">
-                        <p className="mb-1">
-                            <strong>To:</strong> {selectedMail.to}
-                        </p>
-                        <p className="mb-1">
-                            <strong>Date:</strong> {new Date(selectedMail.timestamp).toLocaleString()}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="mail-body border-top pt-3">
-                    <div dangerouslySetInnerHTML={{ __html: selectedMail.body }} />
-                </div>
-
-                <div className="mt-4">
+            <Card className="mail-detail-card">
+                <Card.Body>
                     <Button
-                        variant="danger"
+                        variant="outline-secondary"
                         size="sm"
-                        onClick={() => handleDeleteMail(selectedMail.id)}
+                        onClick={() => setSelectedMail(null)}
+                        className="mb-3"
                     >
-                        Delete
+                        Back to Sentbox
                     </Button>
-                </div>
-            </div>
+
+                    <div className="mail-header">
+                        <h5>{selectedMail.subject}</h5>
+                        <div className="mail-meta">
+                            <p className="mb-1">
+                                <strong>To:</strong> {selectedMail.to}
+                            </p>
+                            <p className="mb-1">
+                                <strong>Date:</strong> {new Date(selectedMail.timestamp).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mail-body border-top pt-3">
+                        <div dangerouslySetInnerHTML={{ __html: selectedMail.body }} />
+                    </div>
+
+                    <div className="mt-4">
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDeleteMail(selectedMail.id)}
+                        >
+                            Delete
+                        </Button>
+                    </div>
+                </Card.Body>
+            </Card>
         );
     }
 
@@ -123,18 +131,38 @@ export default function Sentbox({ userEmail }) {
                         <div
                             key={mail.id}
                             className="mail-item"
-                            onClick={() => setSelectedMail(mail)}
                         >
-                            <div className="flex-grow-1">
-                                <div className="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <strong className="d-block">To: {mail.to}</strong>
-                                        <span className="text-dark">{mail.subject}</span>
+                            <div className="d-flex align-items-start w-100">
+                                <div
+                                    className="flex-grow-1 mail-item-content"
+                                    onClick={() => setSelectedMail(mail)}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <div className="d-flex justify-content-between align-items-start">
+                                        <div className="flex-grow-1">
+                                            <strong className="d-block">To: {mail.to}</strong>
+                                            <span className="text-dark fw-semibold">{mail.subject}</span>
+                                            <p className="text-muted small mb-0 mail-preview">
+                                                {stripHtml(mail.body).substring(0, 100)}...
+                                            </p>
+                                        </div>
+                                        <small className="text-muted ms-3">
+                                            {new Date(mail.timestamp).toLocaleDateString()}
+                                        </small>
                                     </div>
-                                    <small className="text-muted">
-                                        {new Date(mail.timestamp).toLocaleDateString()}
-                                    </small>
                                 </div>
+                                <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    className="ms-2 mail-delete-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteMail(mail.id);
+                                    }}
+                                    title="Delete email"
+                                >
+                                    <i className="bi bi-trash"></i>
+                                </Button>
                             </div>
                         </div>
                     ))}
