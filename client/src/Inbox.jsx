@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRef } from "react";
 import { Alert, Button, Card, ListGroup, Spinner } from "react-bootstrap";
 
 export default function Inbox({ userEmail, onUnreadCountChange }) {
@@ -6,9 +7,22 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedMail, setSelectedMail] = useState(null);
+    const pollIntervalRef = useRef(null);
 
     useEffect(() => {
         fetchInboxMails();
+
+        // Setup polling interval - fetch mails every 2 seconds
+        pollIntervalRef.current = setInterval(() => {
+            fetchInboxMailsPolled();
+        }, 2000);
+
+        // Cleanup interval on component unmount
+        return () => {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -43,6 +57,47 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
             setError("Unable to fetch inbox. Please try again later.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchInboxMailsPolled = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const response = await fetch("http://localhost:5000/api/mail/inbox", {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok) {
+                return;
+            }
+
+            const newMails = payload.mails || [];
+
+            // Optimize: Only update if there are actual changes
+            setMails(prevMails => {
+                // Check if we have new mails or if existing mails have changed
+                if (newMails.length !== prevMails.length) {
+                    return newMails;
+                }
+
+                // Check if any mail has changed (read status, new mail arrived, etc.)
+                const hasChanges = newMails.some((newMail, index) => {
+                    const prevMail = prevMails[index];
+                    return !prevMail ||
+                        newMail.id !== prevMail.id ||
+                        newMail.isRead !== prevMail.isRead;
+                });
+
+                return hasChanges ? newMails : prevMails;
+            });
+        } catch (err) {
+            // Silently fail for polling to avoid console spam
         }
     };
 
