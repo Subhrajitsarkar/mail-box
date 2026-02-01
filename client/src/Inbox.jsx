@@ -166,13 +166,16 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
                         <div
                             key={mail.id}
                             className={`mail-item ${!mail.isRead ? "unread" : ""}`}
-                            onClick={() => handleMailClick(mail)}
                         >
                             <div className="d-flex align-items-start w-100">
                                 {!mail.isRead && (
                                     <div className="blue-dot me-2"></div>
                                 )}
-                                <div className="flex-grow-1">
+                                <div
+                                    className="flex-grow-1 mail-item-content"
+                                    onClick={() => handleMailClick(mail)}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div className="flex-grow-1">
                                             <strong className="d-block">{mail.from}</strong>
@@ -186,6 +189,18 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
                                         </small>
                                     </div>
                                 </div>
+                                <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    className="ms-2 mail-delete-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteMail(mail.id);
+                                    }}
+                                    title="Delete email"
+                                >
+                                    <i className="bi bi-trash"></i>
+                                </Button>
                             </div>
                         </div>
                     ))}
