@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Button, Card, Container, Form, Navbar, Nav } from "react-bootstrap";
 import Login from "./Login";
 import Dashboard from "./Dashboard";
+import useApiClient from "./hooks/useApiClient";
+import useOnMount from "./hooks/useOnMount";
 
 const initialState = {
     email: "",
@@ -15,13 +17,14 @@ export default function App() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const api = useApiClient();
 
-    useEffect(() => {
+    useOnMount(() => {
         const token = localStorage.getItem("token");
         if (token) {
             setPage("dashboard");
         }
-    }, []);
+    });
 
     const isComplete = useMemo(() => {
         return form.email.trim() && form.password.trim() && form.confirmPassword.trim();
@@ -51,19 +54,11 @@ export default function App() {
 
         try {
             setIsSubmitting(true);
-            const response = await fetch("http://localhost:5000/api/signup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email: form.email,
-                    password: form.password,
-                    confirmPassword: form.confirmPassword
-                })
+            const { response, payload } = await api.signup({
+                email: form.email,
+                password: form.password,
+                confirmPassword: form.confirmPassword
             });
-
-            const payload = await response.json();
 
             if (!response.ok) {
                 setError(payload?.message || "Signup failed. Please try again.");

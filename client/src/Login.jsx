@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import { Alert, Button, Card, Container, Form } from "react-bootstrap";
+import useApiClient from "./hooks/useApiClient";
 
 export default function Login({ onLoginSuccess }) {
     const [form, setForm] = useState({ email: "", password: "" });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const api = useApiClient();
 
     const isComplete = useMemo(() => {
         return form.email.trim() && form.password.trim();
@@ -27,15 +29,10 @@ export default function Login({ onLoginSuccess }) {
 
         try {
             setIsSubmitting(true);
-            const response = await fetch("http://localhost:5000/api/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(form)
+            const { response, payload } = await api.login({
+                email: form.email,
+                password: form.password
             });
-
-            const payload = await response.json();
 
             if (!response.ok) {
                 setError(payload?.message || "Login failed. Please try again.");

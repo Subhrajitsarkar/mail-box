@@ -1,30 +1,24 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, Button, Card, Spinner } from "react-bootstrap";
+import useApiClient from "./hooks/useApiClient";
+import useOnMount from "./hooks/useOnMount";
 
 export default function Sentbox({ userEmail }) {
     const [mails, setMails] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedMail, setSelectedMail] = useState(null);
+    const api = useApiClient();
 
-    useEffect(() => {
+    useOnMount(() => {
         fetchSentboxMails();
-    }, []);
+    });
 
     const fetchSentboxMails = async () => {
         try {
             setLoading(true);
             setError("");
-            const token = localStorage.getItem("token");
-
-            const response = await fetch("http://localhost:5000/api/mail/sentbox", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-
-            const payload = await response.json();
+            const { response, payload } = await api.getSentbox();
 
             if (!response.ok) {
                 setError(payload?.message || "Failed to fetch sentbox.");
@@ -41,14 +35,7 @@ export default function Sentbox({ userEmail }) {
 
     const handleDeleteMail = async (mailId) => {
         try {
-            const token = localStorage.getItem("token");
-
-            const response = await fetch(`http://localhost:5000/api/mail/${mailId}`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const { response } = await api.deleteMail(mailId);
 
             if (response.ok) {
                 setMails(mails.filter((mail) => mail.id !== mailId));

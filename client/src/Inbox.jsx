@@ -1,29 +1,23 @@
 import { useEffect, useState } from "react";
-import { useRef } from "react";
-import { Alert, Button, Card, ListGroup, Spinner } from "react-bootstrap";
+import { Alert, Button, Card, Spinner } from "react-bootstrap";
+import useApiClient from "./hooks/useApiClient";
+import useOnMount from "./hooks/useOnMount";
+import usePolling from "./hooks/usePolling";
 
 export default function Inbox({ userEmail, onUnreadCountChange }) {
     const [mails, setMails] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedMail, setSelectedMail] = useState(null);
-    const pollIntervalRef = useRef(null);
+    const api = useApiClient();
 
-    useEffect(() => {
+    useOnMount(() => {
         fetchInboxMails();
+    });
 
-        // Setup polling interval - fetch mails every 2 seconds
-        pollIntervalRef.current = setInterval(() => {
-            fetchInboxMailsPolled();
-        }, 2000);
-
-        // Cleanup interval on component unmount
-        return () => {
-            if (pollIntervalRef.current) {
-                clearInterval(pollIntervalRef.current);
-            }
-        };
-    }, []);
+    usePolling(() => {
+        fetchInboxMailsPolled();
+    }, 2000);
 
     useEffect(() => {
         if (onUnreadCountChange) {
@@ -36,16 +30,7 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
         try {
             setLoading(true);
             setError("");
-            const token = localStorage.getItem("token");
-
-            const response = await fetch("http://localhost:5000/api/mail/inbox", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-
-            const payload = await response.json();
+            const { response, payload } = await api.getInbox();
 
             if (!response.ok) {
                 setError(payload?.message || "Failed to fetch inbox.");
@@ -62,16 +47,7 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
 
     const fetchInboxMailsPolled = async () => {
         try {
-            const token = localStorage.getItem("token");
-
-            const response = await fetch("http://localhost:5000/api/mail/inbox", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-
-            const payload = await response.json();
+            const { response, payload } = await api.getInbox();
 
             if (!response.ok) {
                 return;
@@ -103,14 +79,7 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
 
     const handleDeleteMail = async (mailId) => {
         try {
-            const token = localStorage.getItem("token");
-
-            const response = await fetch(`http://localhost:5000/api/mail/${mailId}`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const { response } = await api.deleteMail(mailId);
 
             if (response.ok) {
                 setMails(mails.filter((mail) => mail.id !== mailId));
@@ -127,13 +96,7 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
         // Mark as read if unread
         if (!mail.isRead) {
             try {
-                const token = localStorage.getItem("token");
-                await fetch(`http://localhost:5000/api/mail/${mail.id}/read`, {
-                    method: "PUT",
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                await api.markMailAsRead(mail.id);
 
                 // Update local state
                 setMails(mails.map(m =>
@@ -143,10 +106,6 @@ export default function Inbox({ userEmail, onUnreadCountChange }) {
                 console.error("Failed to mark as read:", err);
             }
         }
-    };
-
-    const getUnreadCount = () => {
-        return mails.filter(m => !m.isRead).length;
     };
 
     const stripHtml = (html) => {

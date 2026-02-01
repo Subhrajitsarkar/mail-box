@@ -4,6 +4,7 @@ import { Editor } from "react-draft-wysiwyg";
 import { EditorState, convertToRaw } from "draft-js";
 import draftToHtml from "draftjs-to-html";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import useApiClient from "./hooks/useApiClient";
 
 export default function Compose({ userEmail, onMailSent, onClose }) {
     const [to, setTo] = useState("");
@@ -12,6 +13,7 @@ export default function Compose({ userEmail, onMailSent, onClose }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const api = useApiClient();
 
     const handleSendMail = async () => {
         setError("");
@@ -37,23 +39,12 @@ export default function Compose({ userEmail, onMailSent, onClose }) {
 
         try {
             setIsSubmitting(true);
-            const token = localStorage.getItem("token");
-
-            const response = await fetch("http://localhost:5000/api/mail/send", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    to,
-                    subject,
-                    body: htmlContent,
-                    from: userEmail
-                })
+            const { response, payload } = await api.sendMail({
+                to,
+                subject,
+                body: htmlContent,
+                from: userEmail
             });
-
-            const payload = await response.json();
 
             if (!response.ok) {
                 setError(payload?.message || "Failed to send email.");
