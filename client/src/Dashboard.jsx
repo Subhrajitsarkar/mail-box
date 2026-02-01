@@ -1,6 +1,12 @@
-import { Container, Navbar, Nav, Button } from "react-bootstrap";
+import { useState } from "react";
+import { Container, Navbar, Nav, Button, Modal, ListGroup } from "react-bootstrap";
+import Compose from "./Compose";
+import Inbox from "./Inbox";
+import Sentbox from "./Sentbox";
 
 export default function Dashboard({ onLogout }) {
+    const [activeView, setActiveView] = useState("inbox");
+    const [showComposeModal, setShowComposeModal] = useState(false);
     const user = JSON.parse(localStorage.getItem("user") || "{}");
 
     const handleLogout = () => {
@@ -9,19 +15,22 @@ export default function Dashboard({ onLogout }) {
         onLogout();
     };
 
+    const handleMailSent = () => {
+        setShowComposeModal(false);
+        setActiveView("sent");
+    };
+
     return (
         <div className="dashboard-page">
-            <Navbar className="top-nav" expand="md">
-                <Container>
-                    <Navbar.Brand className="brand">MyWebLink</Navbar.Brand>
+            <Navbar className="mail-navbar" expand="md">
+                <Container fluid>
+                    <Navbar.Brand className="brand">MyWebLink Mail</Navbar.Brand>
                     <Navbar.Toggle aria-controls="main-nav" />
                     <Navbar.Collapse id="main-nav">
                         <Nav className="ms-auto">
-                            <Nav.Link className="nav-link">Home</Nav.Link>
-                            <Nav.Link className="nav-link">Products</Nav.Link>
-                            <Nav.Link className="nav-link">About Us</Nav.Link>
+                            <span className="user-email-nav">{user.email}</span>
                             <Button
-                                variant="outline-primary"
+                                variant="outline-light"
                                 size="sm"
                                 onClick={handleLogout}
                                 className="ms-3"
@@ -33,15 +42,65 @@ export default function Dashboard({ onLogout }) {
                 </Container>
             </Navbar>
 
-            <Container className="dashboard-content">
-                <div className="welcome-section">
-                    <h2>Welcome to your mailbox</h2>
-                    <p className="user-email">Logged in as: {user.email}</p>
-                    <div className="mailbox-placeholder">
-                        <p>Your mailbox is empty. Start composing or receiving emails!</p>
+            <div className="mail-layout">
+                <div className="mail-sidebar">
+                    <Button
+                        className="compose-btn-sidebar"
+                        onClick={() => setShowComposeModal(true)}
+                    >
+                        Compose
+                    </Button>
+
+                    <ListGroup variant="flush" className="folder-list">
+                        <ListGroup.Item
+                            action
+                            active={activeView === "inbox"}
+                            onClick={() => setActiveView("inbox")}
+                            className="folder-item"
+                        >
+                            <i className="bi bi-inbox-fill me-2"></i>
+                            Inbox
+                        </ListGroup.Item>
+                        <ListGroup.Item
+                            action
+                            active={activeView === "sent"}
+                            onClick={() => setActiveView("sent")}
+                            className="folder-item"
+                        >
+                            <i className="bi bi-send-fill me-2"></i>
+                            Sent
+                        </ListGroup.Item>
+                    </ListGroup>
+                </div>
+
+                <div className="mail-content">
+                    <div className="mail-header">
+                        <h4>{activeView === "inbox" ? "Inbox" : "Sent"}</h4>
+                    </div>
+                    <div className="mail-body">
+                        {activeView === "inbox" && <Inbox userEmail={user.email} />}
+                        {activeView === "sent" && <Sentbox userEmail={user.email} />}
                     </div>
                 </div>
-            </Container>
+            </div>
+
+            <Modal
+                show={showComposeModal}
+                onHide={() => setShowComposeModal(false)}
+                size="lg"
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Compose New Email</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Compose
+                        userEmail={user.email}
+                        onMailSent={handleMailSent}
+                        onClose={() => setShowComposeModal(false)}
+                    />
+                </Modal.Body>
+            </Modal>
         </div>
     );
 }
